@@ -75,6 +75,9 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 
     // Connect button to slot
     connect(submitButton, &QPushButton::clicked, this, &MainWindow::showBits);
+
+    // Connect Enter key to showBits function
+    connect(inputField, &QLineEdit::returnPressed, this, &MainWindow::showBits);
 }
 
 void MainWindow::showBits()
