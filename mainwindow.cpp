@@ -1,15 +1,16 @@
 #include "mainwindow.h"
 #include <QMessageBox>
 #include <QPalette>
+#include <QMouseEvent>
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
     // Main layout setup
     QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setSpacing(10); // Spacing between elements
-    layout->setContentsMargins(15, 15, 15, 15); // Margins around the layout
+    layout->setSpacing(10);
+    layout->setContentsMargins(15, 15, 15, 15);
 
-    setStyleSheet("background-color: #f0f0f0;"); // Light grey background
+    setStyleSheet("background-color: #f0f0f0;");
 
     // Reminder label
     patternReminderLabel = new QLabel("Reminder:\n- Hex: start with '0x' (e.g., 0x1F)\n- Decimal: just enter the number (e.g., 255)", this);
@@ -47,6 +48,21 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         );
     layout->addWidget(clearButton);
 
+    // Calculate button
+    calculateButton = new QPushButton("Calculate Field Value", this);
+    calculateButton->setStyleSheet(
+        "background-color: #2196F3; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 14px;"
+        "font-weight: bold; cursor: pointer;"
+        "}"
+        "QPushButton:hover { background-color: #1976D2; }"
+        );
+    layout->addWidget(calculateButton);
+
+    // Result label
+    resultLabel = new QLabel("Result: ", this);
+    resultLabel->setStyleSheet("font-size: 14px; color: #333;");
+    layout->addWidget(resultLabel);
+
     // Grid layout for bit number and value labels
     QGridLayout *bitLayout = new QGridLayout();
     layout->addLayout(bitLayout);
@@ -57,40 +73,38 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 
     // Setup bit number labels (31-16 in first line, 15-0 in third line)
     for (int i = 0; i < 32; i++) {
-        bitNumberLabels[i] = new QLabel(QString::number(31 - i), this); // Bit number labels
+        bitNumberLabels[i] = new QLabel(QString::number(31 - i), this);
         bitNumberLabels[i]->setAlignment(Qt::AlignCenter);
         bitNumberLabels[i]->setPalette(greyPalette);
+        bitNumberLabels[i]->setCursor(Qt::PointingHandCursor);
+        bitNumberLabels[i]->setAttribute(Qt::WA_Hover, true);
+        bitNumberLabels[i]->installEventFilter(this);
 
-        // Place bit number labels for bits 31-16 in first row, and bits 15-0 in third row
         if (i < 16) {
-            bitLayout->addWidget(bitNumberLabels[i], 0, i); // First row for 31-16
+            bitLayout->addWidget(bitNumberLabels[i], 0, i);
         } else {
-            bitLayout->addWidget(bitNumberLabels[i], 2, i - 16); // Third row for 15-0
+            bitLayout->addWidget(bitNumberLabels[i], 2, i - 16);
         }
     }
 
-    // Setup bit value labels (31-16 in second line, 15-0 in fourth line)
+    // Setup bit value labels
     for (int i = 0; i < 32; i++) {
-        bitLabels[i] = new QLabel("0", this);  // Default bit value
+        bitLabels[i] = new QLabel("0", this);
         bitLabels[i]->setAlignment(Qt::AlignCenter);
         bitLabels[i]->setStyleSheet("padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
 
-        // Place bit value labels for bits 31-16 in second row, and bits 15-0 in fourth row
         if (i < 16) {
-            bitLayout->addWidget(bitLabels[i], 1, i); // Second row for 31-16 values
+            bitLayout->addWidget(bitLabels[i], 1, i);
         } else {
-            bitLayout->addWidget(bitLabels[i], 3, i - 16); // Fourth row for 15-0 values
+            bitLayout->addWidget(bitLabels[i], 3, i - 16);
         }
     }
 
-    // Connect button to slot
+    // Connect buttons to slots
     connect(submitButton, &QPushButton::clicked, this, &MainWindow::showBits);
-
-    // Connect Enter key to showBits function
     connect(inputField, &QLineEdit::returnPressed, this, &MainWindow::showBits);
-
-    // Connect Clear button to clear function
     connect(clearButton, &QPushButton::clicked, this, &MainWindow::clearBits);
+    connect(calculateButton, &QPushButton::clicked, this, &MainWindow::calculateFieldValue); // Connect calculate button
 }
 
 void MainWindow::showBits()
@@ -101,9 +115,9 @@ void MainWindow::showBits()
 
     // Check input for hex or decimal
     if (inputText.startsWith("0x") || inputText.startsWith("0X")) {
-        value = inputText.toUInt(&ok, 16); // Hexadecimal
+        value = inputText.toUInt(&ok, 16);
     } else {
-        value = inputText.toUInt(&ok, 10); // Decimal
+        value = inputText.toUInt(&ok, 10);
     }
 
     // Validate input
@@ -115,11 +129,11 @@ void MainWindow::showBits()
     // Convert to 32-bit binary string
     QString binaryString = QString("%1").arg(value, 32, 2, QChar('0'));
 
-    // Update bit labels
+    // Update bit labels and reset clicked bits
+    clickedBits.clear(); // Clear previously clicked bits
     for (int i = 0; i < 32; i++) {
-        bitLabels[i]->setText(QString(binaryString[i])); // Update each bit value
+        bitLabels[i]->setText(QString(binaryString[i]));
 
-        // Set green background if the bit is 1
         if (binaryString[i] == '1') {
             bitLabels[i]->setStyleSheet("background-color: green; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
         } else {
@@ -130,12 +144,63 @@ void MainWindow::showBits()
 
 void MainWindow::clearBits()
 {
-    // Clear the input field
-    inputField->clear();
+    inputField->clear(); // Clear the input field
+    resultLabel->setText("Result: "); // Clear the result label
+    clickedBits.clear(); // Clear the clicked bits
 
-    // Reset all bit labels to "0" and remove background color
+    // Reset bit value labels and clicked bit styles
     for (int i = 0; i < 32; i++) {
-        bitLabels[i]->setText("0");
-        bitLabels[i]->setStyleSheet("padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
+        bitLabels[i]->setText("0"); // Reset bit value
+        bitLabels[i]->setStyleSheet("padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;"); // Reset style
+
+        // Reset clicked bit number color
+        bitNumberLabels[i]->setStyleSheet("color: gray;"); // Reset clicked bit number to gray
     }
+}
+
+
+void MainWindow::calculateFieldValue()
+{
+    if (clickedBits.isEmpty()) {
+        resultLabel->setText("Result: No bits selected."); // Handle case with no clicked bits
+        return;
+    }
+
+    // Calculate the decimal value of the selected bits
+    int decimalValue = 0;
+    QString bitString;
+    bool ok; // Declare 'ok' here to check conversion success
+
+    for (int index : clickedBits) {
+        bitString.append(bitLabels[index]->text()); // Collect the bit values
+    }
+
+    decimalValue = bitString.toInt(&ok, 2); // Convert to decimal
+
+    if (ok) {
+        resultLabel->setText(QString("Result: %1 = %2").arg(bitString).arg(decimalValue));
+    } else {
+        resultLabel->setText("Result: Conversion error.");
+    }
+}
+
+// Event filter to handle bit number clicks
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonPress) {
+        for (int i = 0; i < 32; ++i) {
+            if (obj == bitNumberLabels[i]) {
+                // Toggle clicked bit's index
+                if (clickedBits.contains(i)) {
+                    clickedBits.removeAll(i); // Remove if already clicked
+                    bitNumberLabels[i]->setStyleSheet("color: gray;"); // Reset color
+                } else {
+                    clickedBits.append(i); // Add clicked bit index
+                    bitNumberLabels[i]->setStyleSheet("color: green;"); // Highlight clicked bit
+                }
+                break;
+            }
+        }
+    }
+    return QWidget::eventFilter(obj, event);
 }
