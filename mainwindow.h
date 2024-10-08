@@ -17,6 +17,7 @@ public:
 
 private slots:
     void showBits();
+    void clearBits();
 
 private:
     QLineEdit *inputField;

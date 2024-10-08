@@ -37,6 +37,16 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         );
     layout->addWidget(submitButton);
 
+    // Clear button
+    QPushButton *clearButton = new QPushButton("Clear", this);
+    clearButton->setStyleSheet(
+        "background-color: #f44336; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 14px;"
+        "font-weight: bold; cursor: pointer;"
+        "}"
+        "QPushButton:hover { background-color: #d32f2f; }"
+        );
+    layout->addWidget(clearButton);
+
     // Grid layout for bit number and value labels
     QGridLayout *bitLayout = new QGridLayout();
     layout->addLayout(bitLayout);
@@ -78,6 +88,9 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 
     // Connect Enter key to showBits function
     connect(inputField, &QLineEdit::returnPressed, this, &MainWindow::showBits);
+
+    // Connect Clear button to clear function
+    connect(clearButton, &QPushButton::clicked, this, &MainWindow::clearBits);
 }
 
 void MainWindow::showBits()
@@ -112,5 +125,17 @@ void MainWindow::showBits()
         } else {
             bitLabels[i]->setStyleSheet("background-color: none; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
         }
+    }
+}
+
+void MainWindow::clearBits()
+{
+    // Clear the input field
+    inputField->clear();
+
+    // Reset all bit labels to "0" and remove background color
+    for (int i = 0; i < 32; i++) {
+        bitLabels[i]->setText("0");
+        bitLabels[i]->setStyleSheet("padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
     }
 }
