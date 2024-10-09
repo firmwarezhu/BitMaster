@@ -122,15 +122,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         }
     }
 
-    // Result label
-    resultLabel = new QLabel("Field Result: ", this);
-    resultLabel->setStyleSheet(
-        "font-size: 14px; "
-        "color: #333; "
-        "padding: 5px;"              // Optional padding inside the label
-        );
-    layout->addWidget(resultLabel);
-
     layout->addSpacing(20);
 
     layout->addLayout(horizontalLayoutrow1);
@@ -139,6 +130,16 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     patternFieldUseLabel->setAlignment(Qt::AlignLeft);
     patternFieldUseLabel->setStyleSheet("font-size: 14px; color: #333; padding: 5px;");
     layout->addWidget(patternFieldUseLabel);
+
+    // Result label
+    resultLabel = new QLabel("Field Result: ", this);
+    resultLabel->setStyleSheet(
+        "font-size: 14px; "
+        "font-weight: bold; cursor: pointer;"
+        "color: #333; "
+        "padding: 5px;"              // Optional padding inside the label
+        );
+    layout->addWidget(resultLabel);
 
     layout->addLayout(horizontalLayoutrow2);
     layout->addSpacing(20);
@@ -233,7 +234,10 @@ void MainWindow::calculateFieldValue()
     decimalValue = bitString.toInt(&ok, 2); // Convert to decimal
 
     if (ok) {
-        resultLabel->setText(QString("Field Result: %1 = %2").arg(bitString).arg(decimalValue));
+
+        // Set text with subscript for base 2 and base 10
+        resultLabel->setText(QString("Field Result: %1<sub>2</sub> = %2<sub>10</sub>").arg(bitString).arg(decimalValue));
+
     } else {
         resultLabel->setText("Field Result: Conversion error.");
     }
