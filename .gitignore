@@ -1,0 +1,12 @@
+# User specific configuration file
+BitMaster.pro.user
+
+# Todo file
+Todo.txt
+
+# Build directory
+build/
+
+# Clickable label implementation files
+clickablelabel.cpp
+clickablelabel.h
