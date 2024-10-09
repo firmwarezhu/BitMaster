@@ -2,7 +2,7 @@
 #include <QMessageBox>
 #include <QPalette>
 #include <QMouseEvent>
-
+#include <QDebug> 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
     // Main layout setup
@@ -73,30 +73,30 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 
     // Setup bit number labels (31-16 in first line, 15-0 in third line)
     for (int i = 0; i < 32; i++) {
-        bitNumberLabels[i] = new QLabel(QString::number(31 - i), this);
-        bitNumberLabels[i]->setAlignment(Qt::AlignCenter);
-        bitNumberLabels[i]->setPalette(greyPalette);
-        bitNumberLabels[i]->setCursor(Qt::PointingHandCursor);
-        bitNumberLabels[i]->setAttribute(Qt::WA_Hover, true);
-        bitNumberLabels[i]->installEventFilter(this);
+        bitNumberLabels[31 - i] = new QLabel(QString::number(31 - i), this);
+        bitNumberLabels[31 - i]->setAlignment(Qt::AlignCenter);
+        bitNumberLabels[31 - i]->setPalette(greyPalette);
+        bitNumberLabels[31 - i]->setCursor(Qt::PointingHandCursor);
+        bitNumberLabels[31 - i]->setAttribute(Qt::WA_Hover, true);
+        bitNumberLabels[31 - i]->installEventFilter(this);
 
         if (i < 16) {
-            bitLayout->addWidget(bitNumberLabels[i], 0, i);
+            bitLayout->addWidget(bitNumberLabels[31 - i], 0, i);
         } else {
-            bitLayout->addWidget(bitNumberLabels[i], 2, i - 16);
+            bitLayout->addWidget(bitNumberLabels[31 - i], 2, i - 16);
         }
     }
 
     // Setup bit value labels
     for (int i = 0; i < 32; i++) {
-        bitLabels[i] = new QLabel("0", this);
-        bitLabels[i]->setAlignment(Qt::AlignCenter);
-        bitLabels[i]->setStyleSheet("padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
+        bitLabels[31 - i] = new QLabel("0", this);
+        bitLabels[31 - i]->setAlignment(Qt::AlignCenter);
+        bitLabels[31 - i]->setStyleSheet("padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
 
         if (i < 16) {
-            bitLayout->addWidget(bitLabels[i], 1, i);
+            bitLayout->addWidget(bitLabels[31 - i], 1, i);
         } else {
-            bitLayout->addWidget(bitLabels[i], 3, i - 16);
+            bitLayout->addWidget(bitLabels[31 - i], 3, i - 16);
         }
     }
 
@@ -132,12 +132,12 @@ void MainWindow::showBits()
     // Update bit labels and reset clicked bits
     clickedBits.clear(); // Clear previously clicked bits
     for (int i = 0; i < 32; i++) {
-        bitLabels[i]->setText(QString(binaryString[i]));
+        bitLabels[31 - i]->setText(QString(binaryString[i]));
 
         if (binaryString[i] == '1') {
-            bitLabels[i]->setStyleSheet("background-color: green; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
+            bitLabels[31 - i]->setStyleSheet("background-color: green; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
         } else {
-            bitLabels[i]->setStyleSheet("background-color: none; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
+            bitLabels[31 - i]->setStyleSheet("background-color: none; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;");
         }
     }
 }
@@ -166,15 +166,27 @@ void MainWindow::calculateFieldValue()
         return;
     }
 
+    // Sort the clickedBits vector in ascending order
+    std::sort(clickedBits.begin(), clickedBits.end());
+	
+	// Print the content of clickedBits
+    qDebug() << "clickedBits content:" << clickedBits;
+	
     // Calculate the decimal value of the selected bits
     int decimalValue = 0;
     QString bitString;
     bool ok; // Declare 'ok' here to check conversion success
 
-    for (int index : clickedBits) {
-        bitString.append(bitLabels[index]->text()); // Collect the bit values
-    }
 
+    
+    // Reverse the loop to collect the bit values from MSB to LSB
+    for (int i = clickedBits.size() - 1; i >= 0; --i) {
+        int index = clickedBits[i];
+        bitString.append(bitLabels[index]->text()); // Collect the bit values
+        // Print the content of the bitLabel for the clicked bit
+        qDebug() << "Bit" << index << "content:" << bitLabels[index]->text();
+    }
+	
     decimalValue = bitString.toInt(&ok, 2); // Convert to decimal
 
     if (ok) {
@@ -193,10 +205,10 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                 // Toggle clicked bit's index
                 if (clickedBits.contains(i)) {
                     clickedBits.removeAll(i); // Remove if already clicked
-                    bitNumberLabels[i]->setStyleSheet("color: gray;"); // Reset color
+                    bitNumberLabels[i]->setStyleSheet("background-color: none;"); // Reset background color
                 } else {
                     clickedBits.append(i); // Add clicked bit index
-                    bitNumberLabels[i]->setStyleSheet("color: green;"); // Highlight clicked bit
+                    bitNumberLabels[i]->setStyleSheet("background-color: yellow;"); // Highlight clicked bit
                 }
                 break;
             }
