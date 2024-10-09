@@ -28,6 +28,9 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     inputField->setStyleSheet("padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px;");
     layout->addWidget(inputField);
 
+    QHBoxLayout *horizontalLayoutrow1 = new QHBoxLayout();
+    QHBoxLayout *horizontalLayoutrow2 = new QHBoxLayout();
+
     // Submit button
     QPushButton *submitButton = new QPushButton("Show 32-bit Value", this);
     submitButton->setStyleSheet(
@@ -36,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         "}"
         "QPushButton:hover { background-color: #45a049; }"
         );
-    layout->addWidget(submitButton);
+    //layout->addWidget(submitButton);
 
     // Clear button
     QPushButton *clearButton = new QPushButton("Clear", this);
@@ -46,7 +49,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         "}"
         "QPushButton:hover { background-color: #d32f2f; }"
         );
-    layout->addWidget(clearButton);
+    //layout->addWidget(clearButton);
+
+    horizontalLayoutrow1->addWidget(submitButton);
+    horizontalLayoutrow1->addWidget(clearButton);
 
     // Calculate button
     calculateButton = new QPushButton("Calculate Field Value", this);
@@ -56,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         "}"
         "QPushButton:hover { background-color: #1976D2; }"
         );
-    layout->addWidget(calculateButton);
+    //layout->addWidget(calculateButton);
 	
 	// Add a new button for clearing selected bits and the field result
     clearSelectedButton = new QPushButton("Clear Selected Bits and Result", this);
@@ -66,28 +72,32 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         "}"
         "QPushButton:hover { background-color: #F57C00; }"
     );
-    layout->addWidget(clearSelectedButton);
+    //layout->addWidget(clearSelectedButton);
+
+    horizontalLayoutrow2->addWidget(calculateButton);
+    horizontalLayoutrow2->addWidget(clearSelectedButton);
 
     // Connect the new button to the slot
     connect(clearSelectedButton, &QPushButton::clicked, this, &MainWindow::clearSelectedBitsAndResult);
-    // Result label
-    resultLabel = new QLabel("Result: ", this);
-    resultLabel->setStyleSheet("font-size: 14px; color: #333;");
-    layout->addWidget(resultLabel);
 
     // Grid layout for bit number and value labels
     QGridLayout *bitLayout = new QGridLayout();
     layout->addLayout(bitLayout);
 
-    // Grey color palette for bit number labels
-    QPalette greyPalette;
-    greyPalette.setColor(QPalette::WindowText, Qt::gray);
+	// Black color palette for bit number labels
+    QPalette grayPalette;
+    grayPalette.setColor(QPalette::WindowText, Qt::gray);
+	
+	// Bold font
+	QFont boldFont;
+	boldFont.setBold(true);  // Set the font to bold
 
     // Setup bit number labels (31-16 in first line, 15-0 in third line)
     for (int i = 0; i < 32; i++) {
         bitNumberLabels[31 - i] = new QLabel(QString::number(31 - i), this);
         bitNumberLabels[31 - i]->setAlignment(Qt::AlignCenter);
-        bitNumberLabels[31 - i]->setPalette(greyPalette);
+        bitNumberLabels[31 - i]->setPalette(grayPalette);
+		bitNumberLabels[31 - i]->setFont(boldFont);        // Apply bold font
         bitNumberLabels[31 - i]->setCursor(Qt::PointingHandCursor);
         bitNumberLabels[31 - i]->setAttribute(Qt::WA_Hover, true);
         bitNumberLabels[31 - i]->installEventFilter(this);
@@ -111,6 +121,27 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
             bitLayout->addWidget(bitLabels[31 - i], 3, i - 16);
         }
     }
+
+    // Result label
+    resultLabel = new QLabel("Field Result: ", this);
+    resultLabel->setStyleSheet(
+        "font-size: 14px; "
+        "color: #333; "
+        "padding: 5px;"              // Optional padding inside the label
+        );
+    layout->addWidget(resultLabel);
+
+    layout->addSpacing(20);
+
+    layout->addLayout(horizontalLayoutrow1);
+    // Reminder label
+    patternFieldUseLabel = new QLabel("Field calculation:  Click bit numbers to select a field", this);
+    patternFieldUseLabel->setAlignment(Qt::AlignLeft);
+    patternFieldUseLabel->setStyleSheet("font-size: 14px; color: #333; padding: 5px;");
+    layout->addWidget(patternFieldUseLabel);
+
+    layout->addLayout(horizontalLayoutrow2);
+    layout->addSpacing(20);
 
     // Connect buttons to slots
     connect(submitButton, &QPushButton::clicked, this, &MainWindow::showBits);
@@ -141,8 +172,8 @@ void MainWindow::showBits()
     // Convert to 32-bit binary string
     QString binaryString = QString("%1").arg(value, 32, 2, QChar('0'));
 
-    // Update bit labels and reset clicked bits
-    clickedBits.clear(); // Clear previously clicked bits
+    clearSelectedBitsAndResult(); // fix the issue selected bitNumberLabels is not restore to gray
+
     for (int i = 0; i < 32; i++) {
         bitLabels[31 - i]->setText(QString(binaryString[i]));
 
@@ -157,7 +188,7 @@ void MainWindow::showBits()
 void MainWindow::clearBits()
 {
     inputField->clear(); // Clear the input field
-    resultLabel->setText("Result: "); // Clear the result label
+    resultLabel->setText("Field Result: "); // Clear the result label
     clickedBits.clear(); // Clear the clicked bits
 
     // Reset bit value labels and clicked bit styles
@@ -174,7 +205,7 @@ void MainWindow::clearBits()
 void MainWindow::calculateFieldValue()
 {
     if (clickedBits.isEmpty()) {
-        resultLabel->setText("Result: No bits selected."); // Handle case with no clicked bits
+        resultLabel->setText("Field Result: No bits selected."); // Handle case with no clicked bits
         return;
     }
 
@@ -202,9 +233,9 @@ void MainWindow::calculateFieldValue()
     decimalValue = bitString.toInt(&ok, 2); // Convert to decimal
 
     if (ok) {
-        resultLabel->setText(QString("Result: %1 = %2").arg(bitString).arg(decimalValue));
+        resultLabel->setText(QString("Field Result: %1 = %2").arg(bitString).arg(decimalValue));
     } else {
-        resultLabel->setText("Result: Conversion error.");
+        resultLabel->setText("Field Result: Conversion error.");
     }
 }
 
@@ -240,5 +271,5 @@ void MainWindow::clearSelectedBitsAndResult()
         bitNumberLabels[i]->setStyleSheet("color: gray;");
     }
 
-    resultLabel->setText("Result: "); // Clear the field calculation result
+    resultLabel->setText("Field Result: "); // Clear the field calculation result
 }

@@ -27,6 +27,7 @@ private slots:
 
 private:
     QLabel *patternReminderLabel;
+    QLabel *patternFieldUseLabel;
     QLineEdit *inputField;
     QLabel *bitLabels[32];
     QLabel *bitNumberLabels[32];
