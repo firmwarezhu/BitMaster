@@ -57,7 +57,19 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         "QPushButton:hover { background-color: #1976D2; }"
         );
     layout->addWidget(calculateButton);
+	
+	// Add a new button for clearing selected bits and the field result
+    clearSelectedButton = new QPushButton("Clear Selected Bits and Result", this);
+    clearSelectedButton->setStyleSheet(
+        "background-color: #FF9800; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 14px;"
+        "font-weight: bold; cursor: pointer;"
+        "}"
+        "QPushButton:hover { background-color: #F57C00; }"
+    );
+    layout->addWidget(clearSelectedButton);
 
+    // Connect the new button to the slot
+    connect(clearSelectedButton, &QPushButton::clicked, this, &MainWindow::clearSelectedBitsAndResult);
     // Result label
     resultLabel = new QLabel("Result: ", this);
     resultLabel->setStyleSheet("font-size: 14px; color: #333;");
@@ -215,4 +227,18 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         }
     }
     return QWidget::eventFilter(obj, event);
+}
+
+
+void MainWindow::clearSelectedBitsAndResult()
+{
+    // Clear only the selected bits and reset the result label
+    clickedBits.clear(); // Clear the clicked bits
+
+    for (int i = 0; i < 32; i++) {
+        // Reset the style of the clicked bit numbers to grey
+        bitNumberLabels[i]->setStyleSheet("color: gray;");
+    }
+
+    resultLabel->setText("Result: "); // Clear the field calculation result
 }

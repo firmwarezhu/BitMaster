@@ -23,6 +23,7 @@ private slots:
     void showBits();
     void clearBits();
     void calculateFieldValue(); // New slot for calculating field value
+	void clearSelectedBitsAndResult();
 
 private:
     QLabel *patternReminderLabel;
@@ -34,6 +35,9 @@ private:
     QVector<int> clickedBits; // Store the clicked bit indices
 
     bool eventFilter(QObject *obj, QEvent *event) override;
+	
+	// Declare new clear button
+    QPushButton *clearSelectedButton; // Button to clear selected bits and result
 };
 
 #endif // MAINWINDOW_H
