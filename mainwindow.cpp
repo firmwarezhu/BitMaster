@@ -235,8 +235,9 @@ void MainWindow::calculateFieldValue()
 
     if (ok) {
 
-        // Set text with subscript for base 2 and base 10
-        resultLabel->setText(QString("Field Result: %1<sub>2</sub> = %2<sub>10</sub>").arg(bitString).arg(decimalValue));
+        // Set text with subscript for base 2, base 10, and base 16
+        resultLabel->setText(QString("Field Result: %1<sub>2</sub> = %2<sub>10</sub> = %3<sub>16</sub>").arg(bitString).arg(decimalValue).arg(QString::number(decimalValue, 16).toUpper()));
+        
 
     } else {
         resultLabel->setText("Field Result: Conversion error.");
