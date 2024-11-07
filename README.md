@@ -1,5 +1,5 @@
 # Hex to Binary Converter and Field Calculator
-
+![Its look](https://github.com/firmwarezhu/BitMaster/blob/master/BitMaster.png)
 # How to Use
 
 ## Insatll the bitmaster_setup.exe and start your journey!
