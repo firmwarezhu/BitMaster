@@ -1,7 +1,7 @@
-Hex to Binary Converter
+Hex to Binary Converter and Field Calculator
 
 How to Use:
-
+Insatll the bitmaster_setup.exe and start your journey!
 1. Enter a Hex Value
 Type a hexadecimal value in the input field. You can enter it with or without the "0x" prefix (e.g., "FF" or "0xFF").
 
